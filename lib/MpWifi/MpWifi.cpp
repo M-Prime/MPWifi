@@ -10,8 +10,8 @@ MpWifi::MpWifi(){
     host_name_ = file_system_->GetFile("host_name");
     work_mode_ = (file_system_->GetFile("work_mode").toInt()-48);
   } else {
-    ssid_ = "M Prime";
-    pass_ = "123456789";
+    ssid_ = "";
+    pass_ = "";
     ap_ssid_ = "MPWifi";
     ap_pass_ = "mpwifipass";
     host_name_ = "mpwifi";
@@ -62,7 +62,7 @@ void MpWifi::Run(){
 }
 
 void MpWifi::Boot(){
-  
+
 }
 
 int MpWifi::FindBaudrate(){
