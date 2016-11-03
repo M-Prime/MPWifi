@@ -6,10 +6,9 @@ class WebServer{
     String buffer_;
     int port_;
 
+
   public:
     WebServer();
     void Run();
-    void Pannel();
-    void Api();
-    void handler();
+    ESP8266WebServer *internal_server_;
 };

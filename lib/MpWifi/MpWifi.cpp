@@ -1,8 +1,11 @@
 #include "MpWifi.h"
 
 MpWifi::MpWifi(){
+  FileSystem file_system;
+  file_system_ = &file_system;
 
-  if(file_system_->ExistFile("first")){
+//file_system_->ExistFile("first")
+  if(false){
     ssid_ = file_system_->GetFile("ssid");
     pass_ = file_system_->GetFile("pass");
     ap_ssid_ = file_system_->GetFile("ap_ssid");
@@ -21,20 +24,25 @@ MpWifi::MpWifi(){
   }
 
   //Setting up serial port baudrate
-  Serial.begin(serial_baudrate_);
+  Serial.begin(115200);
+  Serial.println("Hola mundo");
 
   //Select and set up network mode
   int now = 0;
+  int start = 0;
   switch(work_mode_){
     case 3:
       WiFi.mode(WIFI_AP_STA);
     case 1:
       WiFi.begin(ssid_.c_str(), pass_.c_str());
-      now = millis();
-      while(WiFi.status() != WL_CONNECTED && (millis() - now) < 5000){
-        Serial.print(".");
+      start = millis();
+      now = 0;
+      while(WiFi.status() != WL_CONNECTED && now<5000){
+          delay(500);
+          Serial.print(".");
+          now = millis() - start;
       }
-      if((millis() - now) < 5000){
+      if(now < 5000){
         Serial.print("Local IP:");
         Serial.println(WiFi.localIP());
         //DNS setting
@@ -43,6 +51,8 @@ MpWifi::MpWifi(){
           while(1) {
             delay(1000);
           }
+        } else {
+          MDNS.addService("http", "tcp", 80);
         }
       } else {
         work_mode_ = 2;
@@ -57,12 +67,13 @@ MpWifi::MpWifi(){
 
 }
 
-void MpWifi::Run(){
-
+void MpWifi::Boot(){
+  WebServer server_t;
+  server_ = &server_t;
 }
 
-void MpWifi::Boot(){
-
+void MpWifi::Run(){
+  server_->Run();
 }
 
 int MpWifi::FindBaudrate(){
