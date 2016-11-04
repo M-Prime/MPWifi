@@ -1,7 +1,10 @@
+#ifndef MPWIFI_H
+#define MPWIFI_H
+
 #include <Arduino.h>
 #include <FileSystem.h>
 #include <WebServer.h>
-#include <ESP8266WiFi.h>
+#include <Comm.h>
 #include <ESP8266mDNS.h>
 
 class MpWifi{
@@ -17,7 +20,7 @@ class MpWifi{
     FileSystem *file_system_;
     WebServer *server_;
     //SD *sd_;
-    //Comm *comm_;
+    Comm *comm_;
   public:
     MpWifi();
     void Run();
@@ -34,3 +37,5 @@ class MpWifi{
     int GetSerialBaudrate();
     int FindBaudrate();
 };
+
+#endif // MPWIFI_H

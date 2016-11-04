@@ -4,9 +4,16 @@ MpWifi::MpWifi(){
   //Create FyleSystem object
   FileSystem file_system;
   file_system_ = &file_system;
+  //Create Comm
+  Comm comm_t;
+  comm_ = &comm_t;
   //Create WebServer for HTTP
-  WebServer server_t;
+  WebServer server_t(comm_);
   server_ = &server_t;
+
+  comm_->SetWebServer(server_);
+
+
 
 }
 
@@ -77,6 +84,7 @@ void MpWifi::Boot(){
 void MpWifi::Run(){
   //Look for clients
   server_->Run();
+  //comm_->Run();
 }
 
 int MpWifi::FindBaudrate(){

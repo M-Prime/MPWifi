@@ -1,42 +1,68 @@
 #include <WebServer.h>
+#include "../Comm/Comm.h"
 
-ESP8266WebServer server(80);
+WiFiServer server(80);
 
-WebServer::WebServer(){
-  //Get the objet pointer
+WebServer::WebServer(Comm *comm){
+
+
+
   internal_server_ = &server;
+  //Get the object pointer
+  comm_ = comm;
   port_ = 80;
 }
 
 void WebServer::Setup(){
-  //Prepare the server's URL
-  internal_server_->on("/", std::bind(&WebServer::Dashboard, this));
-  internal_server_->on("/start", std::bind(&WebServer::Start, this));
-  internal_server_->on("/api", std::bind(&WebServer::Api, this));
-  //Begin the web server
-  internal_server_->begin();
+   server.begin();
 }
 
 void WebServer::Run(){
-  internal_server_->handleClient();
-  delay(10);
+  WiFiClient client = server.available();
+  // wait for a client (web browser) to connect
+  if (client)
+  {
+    Serial.println("\n[Client connected]");
+    while (client.connected())
+    {
+      // read line by line what the client is requesting
+      if (client.available())
+      {
+        String line = client.readStringUntil('\r');
+        Serial.print(line);
+        // wait for end of client's request, that is marked with an empty line
+        if (line.length() == 1 && line[0] == '\n')
+        {
+          client.println("Soy un servidor aunque no lo parezca");
+          break;
+        }
+      }
+    }
+    delay(1); // give the web browser time to receive the data
+
+    // close the connection:
+    client.stop();
+    Serial.println("[Client disonnected]");
+  }
 }
 
 void WebServer::Api(){
-  String html = "You send: ";
+/*  String html = "You send: ";
   uint8_t i=0;
   html += internal_server_->arg(i);
-  String buffer = internal_server_->arg(i);
-  buffer_ = buffer;
-  internal_server_->send(200, "text/html", html);
+  buffer_ = internal_server_->arg(i);
+  //Call comm
+  html += "<br>Response: ";
+  html += comm_->Run();
+  internal_server_->send(200, "text/html", html);*/
 }
 
 void WebServer::Start(){
-  internal_server_->send(200, "text/html", "Welcome to Api");
+  //internal_server_->send(200, "text/html", "Welcome to Api");
 }
 
 void WebServer::Dashboard(){
-  internal_server_->send(200, "text/html", "Welcome to Dashboard");
+//  internal_server_->send(200, "text/html", "Welcome to Dashboard");
 }
 
 String WebServer::GetBuffer(){
