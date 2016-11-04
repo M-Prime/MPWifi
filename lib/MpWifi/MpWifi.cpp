@@ -1,10 +1,17 @@
 #include "MpWifi.h"
 
 MpWifi::MpWifi(){
+  //Create FyleSystem object
   FileSystem file_system;
   file_system_ = &file_system;
+  //Create WebServer for HTTP
+  WebServer server_t;
+  server_ = &server_t;
 
-//file_system_->ExistFile("first")
+}
+
+void MpWifi::Boot(){
+  //file_system_->ExistFile("first")
   if(false){
     ssid_ = file_system_->GetFile("ssid");
     pass_ = file_system_->GetFile("pass");
@@ -24,8 +31,7 @@ MpWifi::MpWifi(){
   }
 
   //Setting up serial port baudrate
-  Serial.begin(115200);
-  Serial.println("Hola mundo");
+  Serial.begin(serial_baudrate_);
 
   //Select and set up network mode
   int now = 0;
@@ -64,15 +70,12 @@ MpWifi::MpWifi(){
       Serial.println("AP mode enable.");
       break;
   }
-
-}
-
-void MpWifi::Boot(){
-  WebServer server_t;
-  server_ = &server_t;
+  //Setting URL and begin the Web Server
+  server_->Setup();
 }
 
 void MpWifi::Run(){
+  //Look for clients
   server_->Run();
 }
 
