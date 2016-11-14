@@ -68,7 +68,6 @@ void WebServer::Api(){
 }
 
 void WebServer::Start(){
-  Prepare("start", "Contenido start --ssid-- --pass-- AP ssid: --ap-ssid-- AP pass: --ap-pass-- Hostname: --hostname--");
 
   String html_code = file_system_->GetFile("start");
   html_code.replace("--ssid--", ssid_);

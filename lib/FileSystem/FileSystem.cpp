@@ -54,7 +54,7 @@ bool FileSystem::DeleteFile(String name){
   String file = "/";
   file += name;
   file += ".txt";
-  return SPIFFS.remove(file);  
+  return SPIFFS.remove(file);
   delay(100);
   SPIFFS.end();
 }

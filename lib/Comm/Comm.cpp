@@ -10,20 +10,22 @@ void Comm::SetWebServer(WebServer *server){
   web_server_ = server;
 }
 
-void Comm::Check(){
-  String local_buffer = "";
+void Comm::Setup(){
+  tcp_->Setup();
+}
 
+void Comm::Check(){
   tcp_->WaitCommand();
-  
 }
 
 String Comm::CheckAndReturn(){
+  Check();
   String local_buffer = "";
 
-  local_buffer = "";
   local_buffer = web_server_->GetBuffer();
   if(local_buffer != ""){
     Serial.println(local_buffer);
+    delay(10);
     String command = "";
     while(Serial.available()) {
       char letra = Serial.read();

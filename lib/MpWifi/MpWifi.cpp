@@ -18,7 +18,8 @@ MpWifi::MpWifi(){
 
 void MpWifi::Boot(){
   //file_system_->ExistFile("first")
-  file_system_.DeleteFile("first");
+  //file_system_.DeleteFile("first");
+  //file_system_.DeleteFile("start");
   delay(50);
   if(file_system_.ExistFile("first")){
     ssid_ = file_system_.GetFile("ssid");
@@ -28,8 +29,8 @@ void MpWifi::Boot(){
     host_name_ = file_system_.GetFile("host_name");
     work_mode_ = (file_system_.GetFile("work_mode").toInt()-48);
   } else {
-    ssid_ = "";
-    pass_ = "";
+    ssid_ = "Rincon";
+    pass_ = "1234567891234";
     ap_ssid_ = "MPWifi";
     ap_pass_ = "mpwifipass";
     host_name_ = "mpwifi";
@@ -78,15 +79,15 @@ void MpWifi::Boot(){
   //Begin the Web Server
   server_.Setup();
 
+  comm_.Setup();
+
   MDNS.addService("http", "tcp", 80);
 }
 
 void MpWifi::Run(){
   //Look for clients
   comm_.Check();
-  delay(10);
   server_.Run();
-  delay(10);
 }
 
 int MpWifi::FindBaudrate(){

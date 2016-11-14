@@ -19,6 +19,7 @@ class Comm {
     void Check();
     String CheckAndReturn();
     void SetWebServer(WebServer *server);
+    void Setup();
 };
 
 #endif // COMM_H
