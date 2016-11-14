@@ -3,68 +3,130 @@
 
 WiFiServer server(80);
 
-WebServer::WebServer(Comm *comm){
-
-
-
+WebServer::WebServer(){
   internal_server_ = &server;
-  //Get the object pointer
+}
+
+void WebServer::SetObjetcs(Comm *comm, FileSystem *file_system){
   comm_ = comm;
-  port_ = 80;
+  file_system_ = file_system;
+}
+
+void WebServer::SetSettings(String ssid, String pass, String host_name, String ap_ssid, String ap_pass, int work_mode){
+  ssid_ = ssid;
+  pass_ = pass;
+  host_name_ = host_name;
+  ap_ssid_ = ap_ssid;
+  ap_pass_ = ap_pass;
+  work_mode_ = work_mode;
 }
 
 void WebServer::Setup(){
+  //Start the web server
    server.begin();
 }
 
 void WebServer::Run(){
   WiFiClient client = server.available();
+  client_ = &client;
   // wait for a client (web browser) to connect
   if (client)
   {
-    Serial.println("\n[Client connected]");
+    request_ = "";
     while (client.connected())
     {
-      // read line by line what the client is requesting
+      //Read the client request line by line
       if (client.available())
       {
         String line = client.readStringUntil('\r');
-        Serial.print(line);
-        // wait for end of client's request, that is marked with an empty line
+        //Save the request
+        request_ += line;
+        //If is the last line
         if (line.length() == 1 && line[0] == '\n')
         {
-          client.println("Soy un servidor aunque no lo parezca");
+          AnalizeURL();
           break;
         }
       }
     }
-    delay(1); // give the web browser time to receive the data
-
-    // close the connection:
-    client.stop();
-    Serial.println("[Client disonnected]");
+    delay(1); //Give some time
+    client.stop();  //Close the connection
   }
 }
 
 void WebServer::Api(){
-/*  String html = "You send: ";
-  uint8_t i=0;
-  html += internal_server_->arg(i);
-  buffer_ = internal_server_->arg(i);
-  //Call comm
-  html += "<br>Response: ";
-  html += comm_->Run();
-  internal_server_->send(200, "text/html", html);*/
+  String html_code = "";
+  String gcode = GetUrlData("/api/");
+  if(gcode != ""){
+    buffer_ = gcode;
+    html_code += comm_->CheckAndReturn();
+  } else {
+    html_code += "nothing";
+  }
+  client_->println(html_code);
+  buffer_ = "";
 }
 
 void WebServer::Start(){
-  //internal_server_->send(200, "text/html", "Welcome to Api");
+  Prepare("start", "Contenido start --ssid-- --pass-- AP ssid: --ap-ssid-- AP pass: --ap-pass-- Hostname: --hostname--");
+
+  String html_code = file_system_->GetFile("start");
+  html_code.replace("--ssid--", ssid_);
+  html_code.replace("--pass--", pass_);
+  html_code.replace("--hostname--", host_name_);
+  html_code.replace("--ap-ssid--", ap_ssid_);
+  html_code.replace("--ap-pass--", ap_pass_);
+
+  client_->println(html_code);
 }
 
 void WebServer::Dashboard(){
-//  internal_server_->send(200, "text/html", "Welcome to Dashboard");
+  Prepare("dashboard", "MpWifi dashboard content");
+
+  String html_code = file_system_->GetFile("dashboard");
+
+  client_->println(html_code);
+}
+
+String WebServer::GetUrlData(String name){
+  //Get the position od the data
+  int position = request_.indexOf(name) + name.length();
+  String return_string = "";
+  //Find the data, until find '/'
+  while(request_[position] != '/'){
+    return_string += request_[position];
+    position++;
+  }
+  return return_string;
+}
+
+void WebServer::AnalizeURL(){
+  if (request_.indexOf("/api/") > 0){Api();}
+  else if (request_.indexOf("/start/") > 0){Start();}
+  else if (request_.indexOf("/") > 0){Dashboard();}
 }
 
 String WebServer::GetBuffer(){
   return buffer_;
+}
+
+void WebServer::Prepare(String page, String content){
+  String file = "/";
+  file += page;
+  file += ".txt";
+
+  SPIFFS.begin();
+  File f = SPIFFS.open(file, "w");
+  if (!f) {
+      Serial.print("\nFile open for write failed ");
+  } else {
+    f.println(content);
+  }
+  f.close();
+  delay(100);
+  SPIFFS.end();
+
+
+  delay(100);
+
 }

@@ -1,8 +1,9 @@
 #include "FileSystem.h"
 
-
 String FileSystem::GetFile(String name){
-  String value = "";
+  SPIFFS.begin();
+
+  String values = "";
   String file = "/";
   file += name;
   file += ".txt";
@@ -11,15 +12,18 @@ String FileSystem::GetFile(String name){
     Serial.print("\nFile open failed: ");
     Serial.print(name);
   } else {
-    value =  f.readStringUntil('\r');
-    value.replace("\n", "");
+    values =  f.readStringUntil('\r');
+    values.replace("\n", "");
     f.close();
     delay(100);
-    return value;
+    SPIFFS.end();
+    return values;
   }
+  SPIFFS.end();
 }
 
 String FileSystem::SetFile(String name, String content){
+  SPIFFS.begin();
   String file = "/";
   file += name;
   file += ".txt";
@@ -31,19 +35,26 @@ String FileSystem::SetFile(String name, String content){
     f.println(content);
   }
   f.close();
-    delay(100);
+  delay(100);
+  SPIFFS.end();
 }
 
 bool FileSystem::ExistFile(String name){
+  SPIFFS.begin();
   String file = "/";
   file += name;
   file += ".txt";
   return SPIFFS.exists(file);
+  delay(100);
+  SPIFFS.end();
 }
 
 bool FileSystem::DeleteFile(String name){
+  SPIFFS.begin();
   String file = "/";
   file += name;
   file += ".txt";
-  return SPIFFS.remove(file);
+  return SPIFFS.remove(file);  
+  delay(100);
+  SPIFFS.end();
 }

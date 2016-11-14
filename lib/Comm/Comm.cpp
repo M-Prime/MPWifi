@@ -2,17 +2,33 @@
 #include "../WebServer/WebServer.h"
 
 Comm::Comm(){
-  //Get pointer to server from MpWifi
-  //web_server_ = server;
+  Tcp tcp_t;
+  tcp_ = &tcp_t;
 }
 
-String Comm::Run(){
-  if(web_server_->GetBuffer() != ""){
-    Serial.println(web_server_->GetBuffer());
+void Comm::SetWebServer(WebServer *server){
+  web_server_ = server;
+}
+
+void Comm::Check(){
+  String local_buffer = "";
+
+  tcp_->WaitCommand();
+  
+}
+
+String Comm::CheckAndReturn(){
+  String local_buffer = "";
+
+  local_buffer = "";
+  local_buffer = web_server_->GetBuffer();
+  if(local_buffer != ""){
+    Serial.println(local_buffer);
+    String command = "";
+    while(Serial.available()) {
+      char letra = Serial.read();
+      command += letra;
+    }
+    return command;
   }
-  return "ok";
-}
-
-void Comm::SetWebServer(WebServer *web_server){
-  web_server_ = web_server;
 }

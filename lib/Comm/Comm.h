@@ -2,19 +2,23 @@
 #define COMM_H
 
 #include <Arduino.h>
-//#include <WebServer.h>
+
+#include "../Tcp/Tcp.h"
 
 class WebServer;
+class Tcp;
 
 class Comm {
   private:
     //Sd *sd_;
-    //Tcp *tcp_;
+    Tcp *tcp_;
     WebServer *web_server_;
+
   public:
     Comm();
-    String Run();
-    void SetWebServer(WebServer *web_server);
+    void Check();
+    String CheckAndReturn();
+    void SetWebServer(WebServer *server);
 };
 
 #endif // COMM_H

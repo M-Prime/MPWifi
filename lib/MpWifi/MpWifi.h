@@ -17,10 +17,10 @@ class MpWifi{
     int work_mode_;
     bool first_;
     int serial_baudrate_;
-    FileSystem *file_system_;
-    WebServer *server_;
+    FileSystem file_system_;
+    WebServer server_;
     //SD *sd_;
-    Comm *comm_;
+    Comm comm_;
   public:
     MpWifi();
     void Run();
