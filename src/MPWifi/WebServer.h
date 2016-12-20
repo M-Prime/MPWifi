@@ -2,26 +2,29 @@
 #define WEBSERVER_H
 
 #include <Arduino.h>
-#include <FileSystem.h>
+#include "FileSystem.h"
 #include <ESP8266WiFi.h>
 
 class Comm;
+class MpWifi;
 
 class WebServer{
   private:
     String buffer_;
+    bool api_flag_;
     String request_;
-    String ssid_, pass_, host_name_, ap_ssid_, ap_pass_;
     int work_mode_;
     WiFiServer *internal_server_;
     WiFiClient *client_;
     Comm *comm_;
     FileSystem *file_system_;
+    MpWifi *mpwifi_;
+    String dashboard_[3];
+    String start_[4];
 
   public:
     WebServer();
-    void SetObjetcs(Comm *comm, FileSystem *file_system);
-    void SetSettings(String ssid, String pass, String host_name, String ap_ssid, String ap_pass, int work_mode);
+    void SetObjetcs(Comm *comm, FileSystem *file_system, MpWifi *mpwifi);
     void Setup();
     void Run();
     String GetUrlData(String name);
@@ -31,6 +34,8 @@ class WebServer{
     void Dashboard();
     String GetBuffer();
     void Prepare(String page, String content);
+    bool GetFlag();
+    void ClearFlag();
 };
 
 
