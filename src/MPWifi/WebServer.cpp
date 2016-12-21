@@ -85,6 +85,10 @@ void WebServer::Api(){
       file_system_->SetFile("first.txt", "existe");
       html_code = file_system_->GetFile("first.txt");
       html_code += "first created";
+    } else if (gcode == "resetMPWifi"){
+      client_->println("Reset done");
+      delay(200);
+      ESP.restart();
     } else {
       buffer_ = gcode;
       api_flag_ = true;
@@ -103,89 +107,42 @@ void WebServer::Api(){
 * First boot page
 */
 void WebServer::Start(){
+  String message = "";
   //If form has been sent
   if(request_.indexOf("change=true") > 0){
     //Get station data
-    String ssid = "";
-    int station = 0;
-    int pos = request_.indexOf("ssid=") + 5;
-    if(pos > 0){
-      while(request_[pos] != '&'){
-        ssid += request_[pos];
-        pos++;
-      }
-      station++;
-    }
-    String pass = "";
-    pos = 0;
-    pos = request_.indexOf("pass=") + 5;
-    if(pos > 0){
-      while(request_[pos] != '&'){
-        pass += request_[pos];
-        pos++;
-      }
-      station++;
-    }
-    String host_name = "";
-    pos = 0;
-    pos = request_.indexOf("hostname=") + 9;
-    if(pos > 0){
-      while(request_[pos] != '&'){
-        host_name += request_[pos];
-        pos++;
-      }
-      station++;
-    }
-    //If station data was received -> save data
-    if(station > 0)
-      mpwifi_->SetStation(ssid, pass, host_name);
+    String ssid = this->GetUrlParameter("ssid=");
+    String pass = this->GetUrlParameter("pass=");
+    String host_name = this->GetUrlParameter("hostname=");
+    mpwifi_->SetStation(ssid, pass, host_name);
+
     //Get work_mode
     int work_mode = 1;
-    pos = 0;
-    pos = request_.indexOf("workmode=") + 9;
-    //If work_mode was received -> save work_mode
-    if(pos > 0){
-      work_mode = request_[pos]-48;
-      mpwifi_->SetWorkMode(work_mode);
-    }
+    work_mode = this->GetUrlParameter("workmode=")[0] -48;
+    Serial.println(work_mode);
+    mpwifi_->SetWorkMode(work_mode);
+
     //Get AP data
-    ssid = "";
-    int ap = 0;
-    pos = 0;
-    pos = request_.indexOf("apssid=") + 7;
-    if(pos > 0){
-      while(request_[pos] != '&'){
-        ssid += request_[pos];
-        pos++;
-      }
-      ap++;
-    }
-    pass = "";
-    pos = 0;
-    pos = request_.indexOf("appass=") + 7;
-    if(pos > 0){
-      while(request_[pos] != '&'){
-        pass += request_[pos];
-        pos++;
-      }
-      ap++;
-    }
-    //If AP data was received -> save data
-    if(ap > 0)
-      mpwifi_->SetAp(ssid, pass);
+    String apssid = this->GetUrlParameter("apssid=");
+    String appass = this->GetUrlParameter("appass=");
+    mpwifi_->SetAp(apssid, appass);
 
     //Create first file
     file_system_->SetFile("first.txt", "existe");
-  }
-
-  //Prepare and send html response
-  for(int i = 0; i < 4; i++){
-    start_[i].replace("{{ ssid }}", mpwifi_->GetStationSsid());
-    start_[i].replace("{{ pass }}", mpwifi_->GetStationPass());
-    start_[i].replace("{{ hostname }}", mpwifi_->GetStationHostname());
-    start_[i].replace("{{ ap-ssid }}", mpwifi_->GetApSsid());
-    start_[i].replace("{{ ap-pass }}", mpwifi_->GetApPass());
-    client_->println(start_[i]);
+    //Reset message
+    message = "<h1>Changes will take place once you <a href='/api/resetMPWifi/'>reset</a> MPWifi.</h1>";
+    client_->println(message);
+  } else {
+    //Prepare and send html response
+    for(int i = 0; i < 4; i++){
+      start_[i].replace("{{ reset_message }}", message);
+      start_[i].replace("{{ ssid }}", mpwifi_->GetStationSsid());
+      start_[i].replace("{{ pass }}", mpwifi_->GetStationPass());
+      start_[i].replace("{{ hostname }}", mpwifi_->GetStationHostname());
+      start_[i].replace("{{ ap-ssid }}", mpwifi_->GetApSsid());
+      start_[i].replace("{{ ap-pass }}", mpwifi_->GetApPass());
+      client_->println(start_[i]);
+    }
   }
 }
 
@@ -212,6 +169,23 @@ String WebServer::GetUrlData(String name){
   String return_string = "";
   //Find the data, until find '/'
   while(request_[position] != '/'){
+    return_string += request_[position];
+    position++;
+  }
+  return return_string;
+}
+
+/**
+* Get a value like ?name=value
+* @param name Parameter's name
+* @return The value, a String
+*/
+String WebServer::GetUrlParameter(String name){
+  //Get the position od the data
+  int position = request_.indexOf(name) + name.length();
+  String return_string = "";
+  //Find the data, until find '/'
+  while(request_[position] != '&'){
     return_string += request_[position];
     position++;
   }

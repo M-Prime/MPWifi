@@ -28,6 +28,7 @@ class WebServer{
     void Setup();
     void Run();
     String GetUrlData(String name);
+    String GetUrlParameter(String name);
     void AnalizeURL();
     void Api();
     void Start();
