@@ -17,8 +17,13 @@ SdCard::SdCard(){
 /**
 * Begin the microSD
 */
-void SdCard::Begin(){
-  SD.begin();
+String SdCard::Begin(){
+
+  //SD.begin();
+  String back = "echo:SD card ok\r\n";
+	back += "ok";
+
+  return back;
 }
 
 /**
@@ -26,7 +31,16 @@ void SdCard::Begin(){
 * @return The list, a String
 */
 String SdCard::GetFileList(){
-  String list = "Begin file list\r\nCOG_TR~1.GCO\r\nEnd file list\r\nok\r\n";
+
+  String list = "Begin file list\r\n";
+	list += "COG_TR~1.GCO\r\n";
+	list += "PP_YZ_~1.GCO\r\n";
+	list += "LITOGR~1.GCO\r\n";
+	list += "/MPRIME~2/PP_BIG~1.GCO\r\n";
+	list += "/MPRIME~2/PP_SMA~1.GCO\r\n";
+	list += "End file list\r\n";
+	list += "ok\r\n";
+  //String list = "Begin file list\r\nCOG_TR~1.GCO\r\nEnd file list\r\nok\r\n";
 
   return list;
 }
@@ -37,10 +51,10 @@ String SdCard::GetFileList(){
 */
 void SdCard::OpenFile(String name){
   //Create a file
-  File file;
+/*  File file;
   file = SD.open(name, FILE_READ);
   file_lenght_ = file.size();
-  my_file_ = &file;
+  my_file_ = &file;*/
   //Set the flag up
   file_open_ = true;
 }
@@ -48,9 +62,11 @@ void SdCard::OpenFile(String name){
 /**
 * Start printing from file
 */
-void SdCard::StartPrinting(){
+String SdCard::StartPrinting(){
   //Set the flag up
   printing_ = true;
+  String back = "ok";
+  return back;
 }
 
 /**
@@ -77,7 +93,7 @@ bool SdCard::PrepareLine(){
 */
   buffer_ = "mil linea";
 
-  byte_pos_ = my_file_->position();
+  byte_pos_ = 0;//my_file_->position();
 
   line_++;
   return true;
@@ -87,7 +103,7 @@ bool SdCard::PrepareLine(){
 * Close file
 */
 void SdCard::CloseFile(){
-  my_file_->close();
+  //my_file_->close();
   file_open_ = false;
   printing_ = false;
 }
@@ -95,39 +111,45 @@ void SdCard::CloseFile(){
 /**
 * Status when print from file is enable
 */
-void SdCard::Status(){
+String SdCard::Status(){
   //SD printing byte 0/478901
-  //ok
-  String send = "SD printing byte ";
-  send += byte_pos_;
-  send += "/";
-  send += file_lenght_;
-  //Serial.println(send);
-  //Serial.println("ok");
+  String back = "SD printing byte ";
+  back += byte_pos_;
+  back += "/";
+  back += file_lenght_;
+  back += "\r\n";
 
+  return back;
 }
 
 /**
 * Start writting on the microSD
 * @param name File's name and extension
 */
-void SdCard::BeginWrite(String name){
+String SdCard::BeginWrite(String name){
   //Create a file
-  File file;
+  /*File file;
   file = SD.open(name, FILE_WRITE);
   my_file_ = &file;
   //Set the flag up
+  */
   write_open_ = true;
+  String back = "echo:Now fresh file: pruebaEscritura.gco";
+	back += "open failed, File: 1641.";
+	back += "ok";
+   return back;
 }
 
 /**
 * Stop writting on the microSD
 * @param name File's name and extension
 */
-void SdCard::StopWrite(String name){
+String SdCard::StopWrite(String name){
   //SD.close();
   //Set the flag down
   write_open_ = false;
+  String back = "ok";
+  return back;
 }
 
 /**
@@ -152,7 +174,7 @@ bool SdCard::ExistFile(String name){
 * @param name File's name and extension
 */
 bool SdCard::DeleteFile(String name){
-  return SD.remove(name);
+  return false;//SD.remove(name);
 }
 
 String SdCard::GetBuffer(){
@@ -183,6 +205,10 @@ void SdCard::SetWriteOpen(){
   write_open_ = false;
 }
 
-void SdCard::Close(){
-  //Serial.println("SD close");
+unsigned long SdCard::GetFileLenght(){
+  return file_lenght_;
+}
+
+String SdCard::Close(){
+  return "ok";
 }

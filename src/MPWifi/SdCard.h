@@ -19,19 +19,19 @@ private:
 
 public:
   SdCard();
-  void Begin();
+  String Begin();
   String GetFileList();
 
   void OpenFile(String name);
-  void StartPrinting();
+  String StartPrinting();
   void PausePrinting();
   bool PrepareLine();
   void CloseFile();
 
-  void Status();
+  String Status();
 
-  void BeginWrite(String name);
-  void StopWrite(String name);
+  String BeginWrite(String name);
+  String StopWrite(String name);
 
   void SetFile(String name, String content);
   void SetFileLine(String content);
@@ -46,8 +46,9 @@ public:
   bool GetPrinting();
   bool GetWriteOpen();
   void SetWriteOpen();
+  unsigned long GetFileLenght();
 
-  void Close();
+  String Close();
 };
 
 #endif // SDCARD_H
