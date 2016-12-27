@@ -33,6 +33,9 @@ class WebServer{
     void Api();
     void Start();
     void Dashboard();
+    void NotFound();
+    void LogIn();
+    bool Session();
     String GetBuffer();
     void Prepare(String page, String content);
     bool GetFlag();

@@ -16,7 +16,7 @@ MpWifi::MpWifi(){
   server_ = &server_t;
   server_->SetObjetcs(&comm_, &file_system_, this);
 
-  comm_.ConnectWebServer(server_);
+  comm_.ConnectWebServer(server_, this);
 
 }
 
@@ -31,6 +31,9 @@ void MpWifi::Boot(){
   //Set the LED for blink in case needed
   pinMode(2, OUTPUT);
   digitalWrite(2,HIGH);
+  
+  //Setting up serial port baudrate
+  SetAutoBaudrate();
 
   //Set network info
   if(file_system_.ExistFile("first.txt")){
@@ -40,14 +43,17 @@ void MpWifi::Boot(){
     ap_pass_ = file_system_.GetFile("ap_pass.txt");
     host_name_ = file_system_.GetFile("host_name.txt");
     work_mode_ = file_system_.GetFile("work_mode.txt").toInt();
+    a_c_user_ = file_system_.GetFile("a_c_user.txt");
+    a_c_pass_ = file_system_.GetFile("a_c_pass.txt");
   } else {
     this->SetStation("", "", "mpwifi");
     this->SetAp("MPWifi", "mpwifipass");
+    this->SetUser("mpwifi", "mpwifipass");
     this->SetWorkMode(2);
   }
 
-  //Setting up serial port baudrate
-  SetAutoBaudrate();
+  session_ = false;
+
 
   //Select and set up network mode
   int now = 0;
@@ -100,11 +106,11 @@ void MpWifi::Run(){
  * Try to get the printer baudrate
  */
 void MpWifi::SetAutoBaudrate(){
-/*
+
   int baudrate[8] = {250000, 230400, 115200, 74880, 57600, 38400, 19200, 9600};
   bool found = false;
   int i = 0;
-  while(!found){
+  while(!found && i < 8){
     Serial.begin(baudrate[i]);
     Serial.println("M105");
     delay(100);
@@ -116,9 +122,12 @@ void MpWifi::SetAutoBaudrate(){
     }
     i++;
   }
-*/
-//For development purposes
-Serial.begin(115200);
+  
+  //For development purposes
+  if(!found){
+    Serial.begin(115200);
+    serial_baudrate_ = 115200;
+  }
 }
 
 /**
@@ -161,6 +170,30 @@ void MpWifi::SetWorkMode(int work_mode){
 }
 
 /**
+ * Set user access control data
+ */
+
+ void MpWifi::SetUser(String user, String pass){
+    file_system_.SetFile("a_c_user.txt", user);
+    a_c_user_ = user;
+    file_system_.SetFile("a_c_pass.txt", pass);
+    a_c_pass_ = pass;    
+ }
+
+/**
+ * Check if the user is login
+ */
+ bool MpWifi::CheckUser(String user, String pass){
+    if(user == a_c_user_ && pass == a_c_pass_){
+      session_ = true;      
+      return true;
+    } else {
+      session_ = false;
+      return false;
+    }
+ }
+
+/**
 * Blink the LED
 * @Param times How many times the LED must Blink
 * @Param delay_time Both HIGH time and LOW time
@@ -197,3 +230,16 @@ String MpWifi::GetApPass(){
 int MpWifi::GetSerialBaudrate(){
   return serial_baudrate_;
 }
+
+bool MpWifi::GetSession(){
+  return session_;
+}
+
+String MpWifi::GetACUser(){
+  return a_c_user_;
+}
+
+String MpWifi::GetACPass(){
+  return a_c_pass_;
+}
+

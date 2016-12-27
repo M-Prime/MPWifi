@@ -37,6 +37,7 @@ void WebServer::Setup(){
    start_[2] = file_system_->GetFile("start_3.html");
    start_[3] = file_system_->GetFile("start_4.html");
 
+
 }
 
 /**
@@ -127,10 +128,15 @@ void WebServer::Start(){
     String appass = this->GetUrlParameter("appass=");
     mpwifi_->SetAp(apssid, appass);
 
+    //Get User data
+    String a_c_user = this->GetUrlParameter("acuser=");
+    String a_c_pass = this->GetUrlParameter("acpassword=");
+    mpwifi_->SetUser(a_c_user, a_c_pass);
+
     //Create first file
     file_system_->SetFile("first.txt", "existe");
     //Reset message
-    message = "<h1>Changes will take place once you <a href='/api/resetMPWifi/'>reset</a> MPWifi.</h1>";
+    message = "<h1>Changes will take place once you <a href='/start/resetMPWifi/'>reset</a> MPWifi.</h1>";
     client_->println(message);
   } else {
     //Prepare and send html response
@@ -141,6 +147,8 @@ void WebServer::Start(){
       start_[i].replace("{{ hostname }}", mpwifi_->GetStationHostname());
       start_[i].replace("{{ ap-ssid }}", mpwifi_->GetApSsid());
       start_[i].replace("{{ ap-pass }}", mpwifi_->GetApPass());
+      start_[i].replace("{{ a-c-user }}", mpwifi_->GetACUser());
+      start_[i].replace("{{ a-c-pass }}", mpwifi_->GetACPass());
       client_->println(start_[i]);
     }
   }
@@ -150,6 +158,7 @@ void WebServer::Start(){
 * Dashboard page
 */
 void WebServer::Dashboard(){
+
   //Prepare and send html response
   for(int i = 0; i < 3; i++){
     String serial_baudrate_string = String(mpwifi_->GetSerialBaudrate());
@@ -157,6 +166,36 @@ void WebServer::Dashboard(){
     client_->println(dashboard_[i]);
   }
 }
+
+/**
+ * Login page
+ */
+void WebServer::LogIn(){
+  //Chec data and send to MPWIFI
+  if(request_.indexOf("change=true") > 0){
+    //Get station data
+    String user = this->GetUrlParameter("user=");
+    String pass = this->GetUrlParameter("pass=");
+
+     if(mpwifi_->CheckUser(user, pass))
+        client_->println("<html><head><meta http-equiv=\"Refresh\" content=\"0;url=/\"></head><body><h1>Wait a second</h1></body></html>");
+  } else if(request_.indexOf("resetMPWifi") > 0){
+      client_->println("Reset done");
+      delay(200);
+      ESP.restart();
+  } 
+  
+  
+  client_->println(file_system_->GetFile("login.html"));
+}
+
+/**
+ * 404
+ */
+ void WebServer::NotFound(){
+    String content = "<h1>404</h1><br>The content you are asking for are not found on MPWifi";
+    client_->println(content);
+ }
 
 /**
 * Get data from the URL
@@ -196,10 +235,25 @@ String WebServer::GetUrlParameter(String name){
 * Analize URL, look for the page
 */
 void WebServer::AnalizeURL(){
-  if (request_.indexOf("/api/") > 0){Api();}
-  else if (request_.indexOf("/start/") > 0){Start();}
-  else if (request_.indexOf("/") > 0){Dashboard();}
+  //If first boot, then charge Start
+  if(!file_system_->ExistFile("first.txt")){
+    this->Start();
+  } else if(mpwifi_->GetSession()){
+    if (request_.indexOf("/api/") > 0){this->Api();}
+    else if (request_.indexOf("/start/") > 0){this->Start();}
+    else if (request_.indexOf("/") > 0){this->Dashboard();}
+    else {this->NotFound();} 
+  } else {
+    this->LogIn();
+  }
 }
+
+/**
+ * Look for old login
+ */
+ bool WebServer::Session(){
+  return false;
+ }
 
 String WebServer::GetBuffer(){
   return buffer_;

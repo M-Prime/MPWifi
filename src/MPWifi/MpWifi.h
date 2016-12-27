@@ -17,10 +17,13 @@ class MpWifi{
     int work_mode_;
     bool first_;
     int serial_baudrate_;
+    String a_c_user_;
+    String a_c_pass_;
     FileSystem file_system_;
     WebServer *server_;
     //SD *sd_;
     Comm comm_;
+    bool session_;
   public:
     MpWifi();
     void Run();
@@ -28,12 +31,17 @@ class MpWifi{
     void SetStation(String ssid, String pass, String host_name);
     void SetAp(String ssid, String pass);
     void SetWorkMode(int work_mode);
+    void SetUser(String user, String pass);
+    bool CheckUser(String user, String pass);
     String GetStationSsid();
     String GetStationPass();
     String GetStationHostname();
     String GetApSsid();
     String GetApPass();
     int GetWorkMode();
+    bool GetSession();
+    String GetACUser();
+    String GetACPass();
     int GetSerialBaudrate();
     void SetAutoBaudrate();
     void Blink(int times, int delay_time);

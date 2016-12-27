@@ -8,6 +8,7 @@
 
 class WebServer;
 class Tcp;
+class MpWifi;
 
 class Comm {
   private:
@@ -17,10 +18,11 @@ class Comm {
     SdCard *sd_card_;
     Tcp *tcp_;
     WebServer *web_server_;
+    MpWifi *mpwifi_;
 
   public:
     Comm();
-    void ConnectWebServer(WebServer *server);
+    void ConnectWebServer(WebServer *server, MpWifi *mpwifi);
     void Setup();
     void Check();
     String CheckAndReturn();

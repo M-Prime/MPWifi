@@ -1,5 +1,6 @@
 #include "Comm.h"
 #include "WebServer.h"
+#include "MpWifi.h"
 
 
 Tcp tcp_t;
@@ -13,7 +14,7 @@ Comm::Comm(){
   tcp_ = &tcp_t;
   sd_card_ = &sd_card_t;
 
-  String SD_command[20] = {"M20*", "M21*", "M22*", "M23 ", "M24*", "M25*", "M26*", "M27", "M28 ", "M29 ", "M30", "M31", "M32 ", "M33", "M34", "M36 "};
+  String SD_command[20] = {"M20*", "M21*", "M22*", "M23 ", "M24*", "M25*", "M26*", "M27", "M28 ", "M29 ", "M30", "M31", "M32 ", "M33", "M34", "M36 ", "G29"};
   for(int i = 0; i < 20; i++)
     SD_command_[i] = SD_command[i];
 }
@@ -23,8 +24,9 @@ Comm::Comm(){
 * in order to read flags and buffer
 * @param server A pointer to a WebServer object
 */
-void Comm::ConnectWebServer(WebServer *server){
+void Comm::ConnectWebServer(WebServer *server, MpWifi *mpwifi){
   web_server_ = server;
+  mpwifi_ = mpwifi;
 }
 
 /**
@@ -43,25 +45,15 @@ void Comm::Check(){
   /*************************
   * Serie
   *************************/
- /* local_buffer_ = "";
-  bool receiveData = false; 
-  while(Serial.available() > 0){
-    local_buffer_ += Serial.read();
-    receiveData = true;
-  }
-  if(receiveData)
-    tcp_->SendCommand(local_buffer_);
-*/
-
-  //Get a response from the printer
   String command = "";
   while(Serial.available()) {
     char letra = Serial.read();
     command += letra;
   }
   //Send printer's response to the client
-  tcp_->SendCommand(command);
-      
+  if(command != "")
+    tcp_->SendCommand(command);
+  
 
   
   /*************************
@@ -69,15 +61,29 @@ void Comm::Check(){
   *************************/
   local_buffer_ = "";
   tcp_->WaitCommand();
+  //delay(10);
   //If there are data on the TCP buffer
   if(tcp_->GetFlag()){
-    local_buffer_ = tcp_->GetBuffer();
-    //If data is not for SD card
-    if(!this->FilterGcode()){
-      //Send data to Printer
-      Serial.print(local_buffer_);
-      //delay(500);
-      
+    if(mpwifi_->GetSession()){
+      local_buffer_ = tcp_->GetBuffer();
+      // Clear the serial buffer out
+      //while(Serial.available() > 0) char t = Serial.read();
+      //If data is not for SD card
+      if(!this->FilterGcode()){
+        //Send data to Printer
+        Serial.print(local_buffer_);
+        delay(10);
+        //Get a response from the printer
+        String command = "";
+        while(Serial.available()) {
+          char letra = Serial.read();
+          command += letra;
+        }
+        //Send printer's response to the client
+        tcp_->SendCommand(command);
+      }
+    } else {
+      tcp_->SendCommand("You must login, go http://mpwifi.local or http://192.168.4.1\r\n");
     }
     //Clear the TCP flag down
     tcp_->ClearFlag();
@@ -124,7 +130,7 @@ String Comm::CheckAndReturn(){
 */
 bool Comm::FilterGcode(){
   //IF it is a SD GCODE
-  for(int i = 0; i < 20; i++){
+  for(int i = 0; i < 17; i++){
     //Look for the GCODE on the list
     int pos = local_buffer_.indexOf(SD_command_[i]);
     /*if(local_buffer_[pos+3] >= 48 && local_buffer_[pos+3] <= 57){
@@ -137,6 +143,7 @@ bool Comm::FilterGcode(){
     if(pos > 0 ){
       int start_pos = 0;
       int end_pos = 0;
+      int ok_pos = -1;
       String name = "";
       switch (i) {
         case 0:
@@ -258,10 +265,18 @@ bool Comm::FilterGcode(){
           tcp_->SendCommand(command_back);
           break;
         case 16:
-          /***************************
-          ****************************
-          ****************************
-          ***************************/
+          Serial.println(local_buffer_);
+          delay(500);
+           String command = "";
+           while(ok_pos < 0){
+              while(Serial.available()) {
+                char letra = Serial.read();
+                command += letra;
+              }
+              ok_pos = command.indexOf("ok");
+           }
+            //Send printer's response to the client
+            tcp_->SendCommand(command);
           break;
       }
       //Send dummy gcode
